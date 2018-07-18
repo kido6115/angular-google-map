@@ -1,0 +1,57 @@
+ #map {
+  width: 100%;
+  height: 650px;
+  margin: 0;
+  padding: 0;
+}
+  .SvgOverlay {
+    position: relative;
+    width: 960px;
+    height: 500px;           
+  }
+
+  .SvgOverlay svg {
+    position: absolute;
+    top: -4000px;
+    left: -4000px;
+    width: 8000px;
+    height: 8000px;        
+  }
+
+  .SvgOverlay path {
+    stroke: black;
+    stroke-width: 1px;
+  }
+  .village{
+    fill-opacity: 0.8
+  }
+  .stations, .stations svg {
+    position: absolute;
+    z-index: 10;
+  }
+  .stations svg {
+    width: 60px;
+    height: 20px;
+    padding-right: 0px;
+    font: 10px sans-serif;
+  }
+  .stations circle {
+    fill: white;
+    stroke: rgb(0, 0, 0);
+    stroke-width: 1.5px;
+  }
+
+  .stop-left {
+    stop-color: white;  /* Indigo */
+}
+
+.stop-right {
+    stop-color: red;  /* Teal */
+}
+
+.filled {
+    fill: url(#mainGradient);
+}
+
+
+
