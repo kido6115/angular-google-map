@@ -23,7 +23,7 @@ npm install --save @types/googlemaps
 #### .ts file
 
 `
-import * as d3 from “d3”;
+import * as d3 from 'd3';
 `
 
 ## D3 Map
