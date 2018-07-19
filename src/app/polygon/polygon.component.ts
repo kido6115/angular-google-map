@@ -53,11 +53,12 @@ export class PolygonComponent implements OnInit {
             .enter().append("path")
             .attr("d", path)
             .attr("class", 'village')
-            .attr('fill', function () {
+            .attr('fill', function (d) {
+              var feature: any = d;
               var grad = d3.scaleLinear<string, number>().domain([0, 100]).range(["white", "red"]);
               var i = Math.random() * 100;
-              d3.select(this).attr('rate', i);
-              return grad(+i);
+              d3.select(this).attr('rate', feature.properties.AREA / 1000000);
+              return grad(feature.properties.AREA / 1000000);
             })
             .on('mouseover', function () { d3.select(this).attr('org', d3.select(this).attr('fill')).style('fill', 'green'); })
             .on('mouseout', function () { d3.select(this).style('fill', d3.select(this).attr('org')); })
@@ -167,26 +168,27 @@ export class PolygonComponent implements OnInit {
       .text('100%');
 
   }
-  barChart() {
-    var svgWidth = 500;
+  barChart(dataset: any[]) {
+    var svgWidth = 1500;
     var svgHeight = 300;
     var svg = d3.select('#svg-barchart').append('svg')
       .attr("width", svgWidth)
       .attr("height", svgHeight + 50)
       .attr("class", "bar-chart")
 
-    var dataset = [80, 100, 56, 12, 18, 30, 40, 12, 16];
+    // var dataset = [80, 100, 56, 12, 18, 30, 40, 12, 16];
     var barPadding = 5;
-    var barWidth = (svgWidth / dataset.length);
+    var barWidth = (svgWidth * 0.9 / dataset.length - 1);
     var barChart = svg.selectAll("rect")
       .data(dataset)
       .enter()
       .append("rect")
       .attr("y", function (d) {
-        return svgHeight + 50 - d * svgHeight / 100
+        return svgHeight - 30 + 50 - d.properties.AREA / 1000000 * svgHeight / 100
       })
+      .attr("x", '55')
       .attr("height", function (d) {
-        return d * svgHeight / 100;
+        return d.properties.AREA / 1000000 * svgHeight / 100;
       })
       .attr("width", barWidth - barPadding)
       .attr("transform", function (d, i) {
@@ -197,26 +199,60 @@ export class PolygonComponent implements OnInit {
         d3.select(this).attr('org', d3.select(this).attr('fill')).style('fill', 'green');
       })
       .on('mouseout', function () { d3.select(this).style('fill', d3.select(this).attr('org')); })
-      .attr('fill', 'orange');;
+      .attr('fill', function (d) {
+        var feature: any = d;
+        var grad = d3.scaleLinear<string, number>().domain([0, 100]).range(["white", "red"]);
+        var i = Math.random() * 100;
+        d3.select(this).attr('rate', feature.properties.AREA / 1000000);
+        return grad(feature.properties.AREA / 1000000);
+      });;
     var distance = barPadding;
+    //rate
     svg.selectAll('text')
       .data(dataset)
       .enter()
       .append('text')
-      .text(function (d) { return d })
+      .text(function (d) { return (d.properties.AREA / 1000000).toFixed(2) })
       .attr('y', function (d) {
-        return svgHeight + 50 - d * svgHeight / 100;
+        return svgHeight - 30 + 50 - d.properties.AREA / 1000000 * svgHeight / 100;
       })
       .attr('x', function () {
         var target = distance
         distance += (barWidth)
-        return barPadding + target
+        return target + 55
       });
+    //x-axis
+    var x = d3.scaleBand().rangeRound([0, svgWidth * 0.9]);
+    var y = d3.scaleLinear().rangeRound([svgHeight, 0]);
+
+    var column = svg.append("g")
+      .attr("transform", "translate(40,20)");
+
+    x.domain(dataset.map(function (d) {
+      return d.properties.TOWN;
+    }));
+    y.domain([0, 100]);
+    //x軸
+    column.append("g")
+      .attr("transform", "translate(0," + svgHeight + ")")
+      .call(d3.axisBottom(x));
+
+    //y軸
+    column.append("g")
+      .call(d3.axisLeft(y))
+      .append("text")
+      .attr("transform", "rotate(-90)")
+      .attr("y", 6)
+      .attr("dy", "0.71em")
+      .attr("text-anchor", "end")
+      .text("Frequency");
   }
   ngOnInit() {
     this.initMap();
     this.bar();
-    this.barChart();
+    this.httpClient.get<any>('./assets/chcg.json').subscribe(data => {
+      this.barChart(data.features);
+    });
 
   }
 
