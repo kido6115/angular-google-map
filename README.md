@@ -35,3 +35,5 @@ import * as d3 from 'd3';
 ## D3 Dashboard
 
 ### Bar chart
+
+### Line chart
