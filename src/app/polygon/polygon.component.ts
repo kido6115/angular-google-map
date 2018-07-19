@@ -289,7 +289,8 @@ export class PolygonComponent implements OnInit {
       .attr("stroke-linejoin", "round")
       .attr("stroke-linecap", "round")
       .attr("stroke-width", 1.5)
-      .attr("d", line);
+      .attr("d", line)
+      .attr("transform","translate(100,0)");
   }
   ngOnInit() {
     this.initMap();
@@ -297,7 +298,7 @@ export class PolygonComponent implements OnInit {
     this.httpClient.get<any>('./assets/chcg.json').subscribe(data => {
       this.barChart(data.features);
     });
-    this.httpClient.get<any>('https://api.coindesk.com/v1/bpi/historical/close.json?start=2018-04-01&end=2018-04-30').subscribe(data => {
+    this.httpClient.get<any>('https://api.coindesk.com/v1/bpi/historical/close.json?start=2018-04-01&end=2018-04-07').subscribe(data => {
       this.lineChart(d3.entries(data.bpi));
     })
 
