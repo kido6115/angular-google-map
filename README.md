@@ -37,3 +37,5 @@ import * as d3 from 'd3';
 ### Bar chart
 
 ### Line chart
+
+### Pie chart

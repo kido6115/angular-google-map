@@ -1,3 +1,4 @@
+import { PieArcDatum } from 'd3';
 ///<reference types="googlemaps" />
 import { Component, OnInit, ViewEncapsulation } from '@angular/core';
 import { HttpClient } from '../../../node_modules/@angular/common/http';
@@ -171,12 +172,11 @@ export class PolygonComponent implements OnInit {
   barChart(dataset: any[]) {
     var svgWidth = 1500;
     var svgHeight = 300;
+    var scale=200;
     var svg = d3.select('#svg-barchart').append('svg')
       .attr("width", svgWidth)
       .attr("height", svgHeight + 50)
       .attr("class", "bar-chart")
-
-    // var dataset = [80, 100, 56, 12, 18, 30, 40, 12, 16];
     var barPadding = 5;
     var barWidth = (svgWidth * 0.9 / dataset.length - 1);
     var barChart = svg.selectAll("rect")
@@ -184,11 +184,11 @@ export class PolygonComponent implements OnInit {
       .enter()
       .append("rect")
       .attr("y", function (d) {
-        return svgHeight - 30 + 50 - d.properties.AREA / 1000000 * svgHeight / 100
+        return svgHeight-30+50  - d.properties.AREA / 1000000 * svgHeight / scale
       })
       .attr("x", '55')
       .attr("height", function (d) {
-        return d.properties.AREA / 1000000 * svgHeight / 100;
+        return d.properties.AREA / 1000000 * svgHeight / scale;
       })
       .attr("width", barWidth - barPadding)
       .attr("transform", function (d, i) {
@@ -214,14 +214,13 @@ export class PolygonComponent implements OnInit {
       .append('text')
       .text(function (d) { return (d.properties.AREA / 1000000).toFixed(2) })
       .attr('y', function (d) {
-        return svgHeight - 30 + 50 - d.properties.AREA / 1000000 * svgHeight / 100;
+        return svgHeight - 30 + 50 - d.properties.AREA / 1000000 * svgHeight / scale;
       })
       .attr('x', function () {
         var target = distance
         distance += (barWidth)
         return target + 55
       });
-    //x-axis
     var x = d3.scaleBand().rangeRound([0, svgWidth * 0.9]);
     var y = d3.scaleLinear().rangeRound([svgHeight, 0]);
 
@@ -231,7 +230,7 @@ export class PolygonComponent implements OnInit {
     x.domain(dataset.map(function (d) {
       return d.properties.TOWN;
     }));
-    y.domain([0, 100]);
+    y.domain([0, scale]);
     //x軸
     column.append("g")
       .attr("transform", "translate(0," + svgHeight + ")")
@@ -248,7 +247,6 @@ export class PolygonComponent implements OnInit {
       .text("Frequency");
   }
   lineChart(data: any[]) {
-
     var svgWidth = 1500, svgHeight = 400;
     var margin = { top: 20, right: 20, bottom: 30, left: 50 };
     var width = svgWidth - margin.left - margin.right;
@@ -290,7 +288,43 @@ export class PolygonComponent implements OnInit {
       .attr("stroke-linecap", "round")
       .attr("stroke-width", 1.5)
       .attr("d", line)
-      .attr("transform","translate(100,0)");
+      .attr("transform", "translate(100,0)");
+  }
+  pieChart() {
+    var svg = d3.select("#svg-pie").append('svg').attr('width', '500').attr('height', '500'),
+      width = +svg.attr("width"),
+      height = +svg.attr("height"),
+      radius = Math.min(width, height) / 2,
+      g = svg.append("g").attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
+    var color = d3.scaleOrdinal(["#98abc5", "#8a89a6", "#7b6888", "#6b486b", "#a05d56", "#d0743c", "#ff8c00"]);
+
+    // var color = d3.scaleOrdinal().range(d3.schemeCategory10);
+    var pie = d3.pie()
+      .sort(null)
+      .value(function (d: any) { return d.properties.AREA; });
+    var path = d3.arc()
+      .outerRadius(radius - 10)
+      .innerRadius(0);
+
+    var label = d3.arc()
+      .outerRadius(radius - 40)
+      .innerRadius(radius - 40);
+
+    this.httpClient.get<any>('./assets/chcg.json').subscribe(data => {
+      var arc = g.selectAll(".arc")
+        .data(pie(data.features))
+        .enter().append("g")
+        .attr("class", "arc");
+
+      arc.append("path")
+        .attr("d", <any>path)
+        .attr("fill", function (d: any) { console.log(d); return color(d.data.properties.TOWN); });
+
+      arc.append("text")
+        .attr("transform", function (d: any) { return "translate(" + label.centroid(d) + ")"; })
+        .attr("dy", "0.35em")
+        .text(function (d: any) { return d.data.properties.TOWN; });
+    });
   }
   ngOnInit() {
     this.initMap();
@@ -300,7 +334,8 @@ export class PolygonComponent implements OnInit {
     });
     this.httpClient.get<any>('https://api.coindesk.com/v1/bpi/historical/close.json?start=2018-04-01&end=2018-04-07').subscribe(data => {
       this.lineChart(d3.entries(data.bpi));
-    })
+    });
+    this.pieChart();
 
   }
 
